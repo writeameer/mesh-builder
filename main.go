@@ -35,17 +35,20 @@ func main() {
 		log.Printf("VNET created %s", *myvnet.Name)
 	}
 
-	createSubNet, err := createSubnet(azureCredential, group, "TestNET", "coolsubnet")
-
+	createSubNet, err := createSubnet(group, "TestNET", "coolsubnet")
 	log.Printf("Subnet created: %s", *createSubNet.Name)
+
+	myNSG, err := createNSG(group, "TestNSG")
+	log.Printf("Subnet created: %s", *myNSG.Name)
+
 }
 
 // Create a resource group for the deployment.
 func createGroup(groupName string) (group resources.Group, err error) {
 
-	groupsClient := azureCredential.ResourcesGroupsClient()
+	client := azureCredential.ResourcesGroupsClient()
 
-	return groupsClient.CreateOrUpdate(
+	return client.CreateOrUpdate(
 		azureCredential.Ctx,
 		groupName,
 		resources.Group{
@@ -56,9 +59,9 @@ func createGroup(groupName string) (group resources.Group, err error) {
 
 func createVNET(group resources.Group, vnetName string) (vnet network.VirtualNetwork, err error) {
 
-	vnetClient := azureCredential.VirtualNetworksClient()
+	client := azureCredential.VirtualNetworksClient()
 
-	future, err := vnetClient.CreateOrUpdate(
+	future, err := client.CreateOrUpdate(
 		azureCredential.Ctx,
 		*group.Name,
 		vnetName,
@@ -71,18 +74,18 @@ func createVNET(group resources.Group, vnetName string) (vnet network.VirtualNet
 			},
 		})
 
-	err = future.WaitForCompletionRef(azureCredential.Ctx, vnetClient.Client)
+	err = future.WaitForCompletionRef(azureCredential.Ctx, client.Client)
 	if err != nil {
 		return vnet, fmt.Errorf("cannot get the vnet create or update future response: %v", err)
 	}
 
-	return future.Result(vnetClient)
+	return future.Result(client)
 }
 
-func createSubnet(azureCredential *helpers.AzureCredential, group resources.Group, vnetName string, subnetName string) (subnet network.Subnet, err error) {
+func createSubnet(group resources.Group, vnetName string, subnetName string) (subnet network.Subnet, err error) {
 
-	subnetsClient := azureCredential.SubnetsClient()
-	future, err := subnetsClient.CreateOrUpdate(
+	client := azureCredential.SubnetsClient()
+	future, err := client.CreateOrUpdate(
 		azureCredential.Ctx,
 		*group.Name,
 		vnetName,
@@ -93,10 +96,30 @@ func createSubnet(azureCredential *helpers.AzureCredential, group resources.Grou
 			},
 		})
 
-	err = future.WaitForCompletionRef(azureCredential.Ctx, subnetsClient.Client)
+	err = future.WaitForCompletionRef(azureCredential.Ctx, client.Client)
 	if err != nil {
-		return subnet, fmt.Errorf("cannot get the vnet create or update future response: %v", err)
+		return subnet, fmt.Errorf("cannot get the subnet create or update future response: %v", err)
 	}
 
-	return future.Result(subnetsClient)
+	return future.Result(client)
+}
+
+func createNSG(group resources.Group, nsgName string) (nsg network.SecurityGroup, err error) {
+
+	client := azureCredential.NewSecurityGroupsClient()
+	future, err := client.CreateOrUpdate(
+		azureCredential.Ctx,
+		*group.Name,
+		nsgName,
+		network.SecurityGroup{
+			Location: to.StringPtr(*group.Location),
+		},
+	)
+
+	err = future.WaitForCompletionRef(azureCredential.Ctx, client.Client)
+	if err != nil {
+		return nsg, fmt.Errorf("cannot get the nsg create or update future response: %v", err)
+	}
+
+	return future.Result(client)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // readJSON Reads json and returns a map
-func readJSON(path string) (*SPInfo, error) {
+func readJSON(path string) (*ServicePrincipal, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatalf("failed to read file: %v", err)
@@ -15,7 +15,7 @@ func readJSON(path string) (*SPInfo, error) {
 	contents := make(map[string]string)
 	json.Unmarshal(data, &contents)
 
-	spInfo := &SPInfo{
+	spInfo := &ServicePrincipal{
 		ClientID:                   contents["clientId"],
 		ClientSecret:               contents["clientSecret"],
 		SubscriptionID:             contents["subscriptionId"],
@@ -27,8 +27,8 @@ func readJSON(path string) (*SPInfo, error) {
 	return spInfo, nil
 }
 
-// SPInfo Contatins details about the service principal used to authenticate with Azure
-type SPInfo struct {
+// ServicePrincipal Contatins details about the service principal used to authenticate with Azure
+type ServicePrincipal struct {
 	ClientID                   string
 	ClientSecret               string
 	SubscriptionID             string

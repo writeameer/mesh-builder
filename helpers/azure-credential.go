@@ -14,10 +14,10 @@ import (
 
 // AzureCredential Contains Azure client details, an authorizer token and context
 type AzureCredential struct {
-	SPInfo     *SPInfo
-	Authorizer autorest.Authorizer
-	Ctx        context.Context
-	Location   *string
+	ServicePrincipal *ServicePrincipal
+	Authorizer       autorest.Authorizer
+	Ctx              context.Context
+	Location         *string
 }
 
 // AuthorizeFromFile Authorizes the Azure API client from file and returns an AzureCredential struct
@@ -33,13 +33,13 @@ func (creds *AzureCredential) AuthorizeFromFile(location ...string) {
 		log.Fatalf("Failed to get OAuth config: %v", err)
 	}
 
-	spInfo, err := readJSON(os.Getenv("AZURE_AUTH_LOCATION"))
+	servicePrincipal, err := readJSON(os.Getenv("AZURE_AUTH_LOCATION"))
 
 	if err != nil {
 		log.Fatalf("Failed to read JSON: %+v", err)
 	}
 
-	creds.SPInfo = spInfo
+	creds.ServicePrincipal = servicePrincipal
 	creds.Authorizer = authorizer
 	creds.Ctx = context.Background()
 	creds.Location = &defaultLocation
@@ -47,22 +47,29 @@ func (creds *AzureCredential) AuthorizeFromFile(location ...string) {
 
 // ResourcesGroupsClient Returns a resources.GroupsClient
 func (creds *AzureCredential) ResourcesGroupsClient() resources.GroupsClient {
-	client := (resources.NewGroupsClient(*&creds.SPInfo.SubscriptionID))
+	client := (resources.NewGroupsClient(*&creds.ServicePrincipal.SubscriptionID))
 	client.Authorizer = creds.Authorizer
 	return client
 }
 
 // VirtualNetworksClient Returns a network.VirtualNetworksClient
 func (creds *AzureCredential) VirtualNetworksClient() network.VirtualNetworksClient {
-	client := (network.NewVirtualNetworksClient(*&creds.SPInfo.SubscriptionID))
+	client := (network.NewVirtualNetworksClient(*&creds.ServicePrincipal.SubscriptionID))
 	client.Authorizer = creds.Authorizer
 	return client
 }
 
 // SubnetsClient Returns a network.SubnetsClient
 func (creds *AzureCredential) SubnetsClient() network.SubnetsClient {
-	client := (network.NewSubnetsClient(*&creds.SPInfo.SubscriptionID))
+	client := (network.NewSubnetsClient(*&creds.ServicePrincipal.SubscriptionID))
 	client.Authorizer = creds.Authorizer
 
+	return client
+}
+
+// NewSecurityGroupsClient Returns a network.NewSecurityGroupsClient
+func (creds *AzureCredential) NewSecurityGroupsClient() network.SecurityGroupsClient {
+	client := network.NewSecurityGroupsClient(*&creds.ServicePrincipal.SubscriptionID)
+	client.Authorizer = creds.Authorizer
 	return client
 }
