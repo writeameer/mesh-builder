@@ -20,7 +20,7 @@ var (
 // Authenticate with the Azure services using file-based authentication
 func main() {
 
-	azureClients.Credential.AuthorizeFromFile("EastAsia")
+	azureClients.Credential.AuthorizeFromFile()
 
 	group, _ := createGroup("AmeerTest")
 	log.Printf("Group %s created in %s", *group.Name, *group.Location)
@@ -45,7 +45,7 @@ func createGroup(groupName string) (group resources.Group, err error) {
 		azureClients.Credential.Ctx,
 		groupName,
 		resources.Group{
-			Location: *&azureClients.Credential.Location,
+			Location: *&azureClients.Location,
 		},
 	)
 }

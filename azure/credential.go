@@ -16,17 +16,11 @@ type Credential struct {
 	ServicePrincipal *ServicePrincipal
 	Authorizer       autorest.Authorizer
 	Ctx              context.Context
-	Location         *string
 }
 
 // AuthorizeFromFile Authorizes the Azure API client from file and returns an AzureCredential struct
-func (creds *Credential) AuthorizeFromFile(location ...string) {
+func (creds *Credential) AuthorizeFromFile() {
 
-	defaultLocation := "EastAsia"
-
-	if location != nil {
-		defaultLocation = location[0]
-	}
 	authorizer, err := auth.NewAuthorizerFromFile(azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
 		log.Fatalf("Failed to get OAuth config: %v", err)
@@ -41,7 +35,6 @@ func (creds *Credential) AuthorizeFromFile(location ...string) {
 	creds.ServicePrincipal = servicePrincipal
 	creds.Authorizer = authorizer
 	creds.Ctx = context.Background()
-	creds.Location = &defaultLocation
 }
 
 // ResourcesGroupsClient Returns a resources.GroupsClient
